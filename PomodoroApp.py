@@ -25,7 +25,7 @@ def getCommandLineArgs():
 	parser = argparse.ArgumentParser(description='Setup your Pomodoro Timer')
 	parser.add_argument('Focus timer length', metavar='F_Time', type=int, nargs='?', help='The number of minutes you want to focus for')
 	parser.add_argument('Break timer length', metavar='B_Time', type=int, nargs='?', help='The number of minutes you want to break for')
-	parser.add_argument('Long break timer length', metavar='L_Time', type=int, nargs='?', help='The number of minutes you want to take a long break for')
+	#Sparser.add_argument('Long break timer length', metavar='L_Time', type=int, nargs='?', help='The number of minutes you want to take a long break for')
 	parser.add_argument('Window Width', metavar='w', type=int, nargs='?', help='Width')
 	parser.add_argument('Window Height', metavar='h', type=int, nargs='?', help='Height')
 	return vars(parser.parse_args())
@@ -43,13 +43,14 @@ def createArc(x, y, r, canvas, **kwargs):
 class Application(tk.Frame):
 	def __init__(self, master=None, windowWidth=None, windowHeight=None, workMin=None, breakMin=None, longBreakMin=None):
 		super().__init__(master)
+
 		self.master = master
 
 		self.master.title("Pomodoro")
 		self.master.resizable(False, False)
+
 		self.windowWidth = (lambda w : w if (w != None) else WINDOW_WIDTH)(windowWidth)
 		self.windowHeight = (lambda h : h if (h != None) else WINDOW_HEIGHT)(windowHeight)
-
 		self.master.geometry(str(self.windowWidth)+'x'+str(self.windowHeight))
 		self.pack()
 
@@ -61,22 +62,23 @@ class Application(tk.Frame):
 		self.numberOfPomodoro = 0
 
 		self.master.bind("<Key>", self.handle_keypress)
-		# DELETE ME: FOR debug #
+		# NOTE DELETE ME: FOR debug #
 		self.master.bind("<Escape>", lambda event : self.master.destroy())
 
 		self.create_widgets()
-		self.update()
+		self.updateCounter()
+		self.updateGui()
 
 
 	def create_widgets(self):
-		self.master.columnconfigure(0,minsize=0)
-		self.master.rowconfigure([0,1,2],minsize=0)
+		self.master.columnconfigure(0,minsize=self.windowWidth)
+		self.master.rowconfigure([0,1,2],minsize=1)
 
 		self.circleCanvas = tk.Canvas(self,width=self.windowWidth,height=self.windowHeight*0.65,bg="turquoise")
 		self.circleCanvas.grid(row=0,column=0,sticky="nsew")
 
 		# creating the text
-		self.timerLabel = tk.Label(master=self, text="Focus!",font="Helvetica 18")
+		self.timerLabel = tk.Label(master=self, text="Focus!",font="Helvetica 18 underline")
 		self.timerLabel.grid(row=1,column=0,sticky="nsew",pady=4)
 
 		#create buttons
@@ -93,11 +95,15 @@ class Application(tk.Frame):
 		return
 
 
-	def update(self):
+	def updateCounter(self):
 		# Update Pomodoro Timer #
 		if self.btn["text"] == "Pause":
 			self.counter += 1
+		# Put updateCounter to sleep for one second
+		return self.master.after(1000, self.updateCounter)
 
+
+	def updateGui(self):
 		if self.mode == Mode.WORK_MINUTES and self.counter == self.timers[Mode.WORK_MINUTES]:
 			# Switch to take a break mode
 			self.changeMode(newMode=Mode.BREAK_MINUTES,text="Break Time!")
@@ -115,20 +121,19 @@ class Application(tk.Frame):
 		smallCircleRadius = 33
 		startingArcAngle = 90
 
-		circlePercent = (self.counter / self.timers[self.mode]) * 360
+		circlePercent = (self.counter / self.timers[self.mode]) * 360.0
 		# print(circlePercent) # DEBUG
 
-		createCircle(x=circleWidth, y=circleHeight, r=bigCircleRadius, canvas=self.circleCanvas, fill="light green")
+		createCircle(x=circleWidth, y=circleHeight, r=bigCircleRadius, canvas=self.circleCanvas, fill="light green", width=2)
 		#this arc needs to redraw as the timer goes down
-		createArc(x=circleWidth, y=circleHeight, r=bigCircleRadius, canvas=self.circleCanvas, fill="coral", start=startingArcAngle, extent=circlePercent)
-		createCircle(x=circleWidth, y=circleHeight, r=smallCircleRadius, canvas=self.circleCanvas, fill="dark grey")
+		createArc(x=circleWidth, y=circleHeight, r=bigCircleRadius-0.5, canvas=self.circleCanvas, fill="coral", start=startingArcAngle, extent=circlePercent, width=2)
+		createCircle(x=circleWidth, y=circleHeight, r=smallCircleRadius, canvas=self.circleCanvas, fill="dark grey", width=2)
 
 		# Update Time #
 		self.currentTimeLabel["text"] = datetime.now().strftime('%a %m/%d/%Y %I:%M')
 
-		# Put window to sleep
-		self.master.after(1000, self.update)
-		return
+		# Put updateGui to sleep for one second
+		return self.master.after(1000, self.updateGui)
 
 
 	# Not sure if this is good idea
@@ -162,15 +167,15 @@ def main():
 	print("Running")
 
 	print("Study Time:",  (lambda t : t if (t != None) else WORK_MINUTES/60)(args['Focus timer length']), 
-		  " Break Time:", (lambda t : t if (t != None) else BREAK_MINUTES/60)(args['Break timer length']),
-		  " Long Break Time:", (lambda t : t if (t != None) else LONG_BREAK/60)(args['Long break timer length']))
+		  " Break Time:", (lambda t : t if (t != None) else BREAK_MINUTES/60)(args['Break timer length']))
+		  #" Long Break Time:", (lambda t : t if (t != None) else LONG_BREAK/60)(args['Long break timer length']))
 
 	app = Application(master=window,
 						windowWidth=args['Window Width'],
 						windowHeight=args['Window Height'],
 						workMin=args['Focus timer length'],
 						breakMin=args['Break timer length'],
-						longBreakMin=args['Long break timer length']
+						#longBreakMin=args['Long break timer length']
 					)
 	app.mainloop()
 
