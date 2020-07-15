@@ -7,12 +7,24 @@ import argparse
 # TODO: Add config file to set a default colors and time
 
 # DEFAULT VALUES #
+# Window WIDTH AND HEIGHT
 WINDOW_WIDTH  = 250
 WINDOW_HEIGHT = 250
-
+# TIMER LENGTHS
 WORK_MINUTES = 25 * 60
 BREAK_MINUTES = 5 * 60
 LONG_BREAK = 30 * 60
+# COLOR VALUES
+BACKGROUND_COLOR = "turquoise"
+TIMER_BG_COLOR = "light green"
+TIMER_COLOR = "coral"
+TIMER_CENTER_COLOR = "dark grey"
+#STRINGS
+GET_READY = "Get Ready!"
+START = "Start"
+PAUSE = "Pause"
+FOCUS = "Focus!"
+BREAK_TIME = "Break Time!"
 #       -        #
 
 class Mode(Enum):
@@ -74,16 +86,16 @@ class Application(tk.Frame):
 		self.master.columnconfigure(0,minsize=self.windowWidth)
 		self.master.rowconfigure([0,1,2],minsize=1)
 
-		self.circleCanvas = tk.Canvas(self,width=self.windowWidth,height=self.windowHeight*0.65,bg="turquoise")
+		self.circleCanvas = tk.Canvas(self,width=self.windowWidth,height=self.windowHeight*0.65,bg=BACKGROUND_COLOR)
 		self.circleCanvas.grid(row=0,column=0,sticky="nsew")
 
 		# creating the text
-		self.timerLabel = tk.Label(master=self, text="Focus!",font="Helvetica 18 underline")
+		self.timerLabel = tk.Label(master=self, text=GET_READY,font="Helvetica 18 underline")
 		self.timerLabel.grid(row=1,column=0,sticky="nsew",pady=4)
 
 		#create buttons
 		self.currentTimeLabel = tk.Label(master=self, font="Helvetica 10")
-		self.btn = tk.Button(master=self,text="Start",command=self.startButton)
+		self.btn = tk.Button(master=self,text=START,command=self.startButton)
 
 		self.currentTimeLabel.grid(row=2,column=0,sticky="w", padx=10)
 		self.btn.grid(row=2,column=0,sticky="e",padx=15,pady=10, ipadx=20)
@@ -91,55 +103,68 @@ class Application(tk.Frame):
 
 
 	def startButton(self):
-		self.btn["text"] = "Pause" if (self.btn["text"] == "Start") else "Start"
+		self.btn["text"] = PAUSE if (self.btn["text"] == START) else START
+		if self.timerLabel["text"] == GET_READY:
+			self.timerLabel["text"] = FOCUS
 		return
 
 
 	def updateCounter(self):
 		# Update Pomodoro Timer #
-		if self.btn["text"] == "Pause":
+		if self.btn["text"] == PAUSE:
 			self.counter += 1
 		# Put updateCounter to sleep for one second
 		return self.master.after(1000, self.updateCounter)
 
 
-	def updateGui(self):
-		if self.mode == Mode.WORK_MINUTES and self.counter == self.timers[Mode.WORK_MINUTES]:
+	def updateGui(self, setNextUpdate = True):
+		if self.mode == Mode.WORK_MINUTES and self.counter >= self.timers[Mode.WORK_MINUTES]:
 			# Switch to take a break mode
-			self.changeMode(newMode=Mode.BREAK_MINUTES,text="Break Time!")
-		elif self.mode == Mode.BREAK_MINUTES and self.counter == self.timers[Mode.BREAK_MINUTES]:
+			self.changeMode(newMode=Mode.BREAK_MINUTES,text=BREAK_TIME)
+		elif self.mode == Mode.BREAK_MINUTES and self.counter >= self.timers[Mode.BREAK_MINUTES]:
 			# Switch to focus mode
-			self.changeMode(newMode=Mode.WORK_MINUTES,text="Focus!")
-		elif self.mode == Mode.LONG_BREAK and self.counter == self.timers[Mode.LONG_BREAK]:
+			self.changeMode(newMode=Mode.WORK_MINUTES,text=FOCUS)
+		elif self.mode == Mode.LONG_BREAK and self.counter >= self.timers[Mode.LONG_BREAK]:
 			pass
 
 		# Update Graphics #
 		# creating the timer dimensions
-		circleWidth = self.windowWidth/2
-		circleHeight = self.windowHeight/3
-		bigCircleRadius = 75
-		smallCircleRadius = 33
-		startingArcAngle = 90
+		circleXPos = self.windowWidth/2
+		circleYPos = self.windowHeight/3
+		bigCircleRadius = 75.0
+		smallCircleRadius = 33.0
+		startingArcAngle = 90.0
 
 		circlePercent = (self.counter / self.timers[self.mode]) * 360.0
 		# print(circlePercent) # DEBUG
 
-		createCircle(x=circleWidth, y=circleHeight, r=bigCircleRadius, canvas=self.circleCanvas, fill="light green", width=2)
+		createCircle(x=circleXPos, y=circleYPos, r=bigCircleRadius, canvas=self.circleCanvas, fill=TIMER_BG_COLOR, width=2)
 		#this arc needs to redraw as the timer goes down
-		createArc(x=circleWidth, y=circleHeight, r=bigCircleRadius-0.5, canvas=self.circleCanvas, fill="coral", start=startingArcAngle, extent=circlePercent, width=2)
-		createCircle(x=circleWidth, y=circleHeight, r=smallCircleRadius, canvas=self.circleCanvas, fill="dark grey", width=2)
+		createArc(x=circleXPos, y=circleYPos, r=bigCircleRadius-0.5,
+				canvas=self.circleCanvas,
+				fill=TIMER_COLOR,
+				start=startingArcAngle,
+				extent=circlePercent,
+				width=2
+			)
+		createCircle(x=circleXPos, y=circleYPos, r=smallCircleRadius, canvas=self.circleCanvas, fill=TIMER_CENTER_COLOR, width=2)
 
 		# Update Time #
-		self.currentTimeLabel["text"] = datetime.now().strftime('%a %m/%d/%Y %I:%M')
+		self.currentTimeLabel["text"] = datetime.now().strftime('%a %m/%d/%Y %I:%M') # for am pm use %p
 
 		# Put updateGui to sleep for one second
-		return self.master.after(1000, self.updateGui)
+		if(setNextUpdate):
+			return self.master.after(1000, self.updateGui)
 
 
 	# Not sure if this is good idea
-	def reset(self):
+	def reset(self, keypress=False):
 		self.counter = 0
-		print("RESET THE TIMER!")
+		self.btn["text"] = START
+		self.timerLabel["text"] = GET_READY
+		self.numberOfPomodoro -= 1 if (self.numberOfPomodoro != 0 and keypress) else 0
+		self.updateGui(setNextUpdate=False)
+		print("Timer was reset!", "Number of Pomodoros so far:",self.numberOfPomodoro)
 		return
 
 
@@ -148,7 +173,7 @@ class Application(tk.Frame):
 		if event.char == ' ':
 			self.startButton()
 		elif event.char == 'r':
-			self.reset()
+			self.reset(keypress=True)
 		return
 
 
