@@ -11,9 +11,13 @@ import argparse
 WINDOW_WIDTH  = 250
 WINDOW_HEIGHT = 250
 # TIMER LENGTHS
-WORK_MINUTES = 25 * 60
-BREAK_MINUTES = 5 * 60
-LONG_BREAK = 30 * 60
+WORK_MINUTES = 25
+BREAK_MINUTES = 5
+LONG_BREAK_MINUTES = 30
+
+WORK_SECONDS = WORK_MINUTES * 60
+BREAK_SECONDS = BREAK_MINUTES * 60
+LONG_BREAK_SECONDS = LONG_BREAK_MINUTES * 60
 # COLOR VALUES
 BACKGROUND_COLOR = "turquoise"
 TIMER_BG_COLOR = "light green"
@@ -28,18 +32,18 @@ BREAK_TIME = "Break Time!"
 #       -        #
 
 class Mode(Enum):
-	WORK_MINUTES = 0
-	BREAK_MINUTES = 1
+	WORK = 0
+	SHORT_BREAK = 1
 	LONG_BREAK = 2
 
 
 def getCommandLineArgs():
 	parser = argparse.ArgumentParser(description='Setup your Pomodoro Timer')
-	parser.add_argument('Focus timer length', metavar='F_Time', type=int, nargs='?', help='The number of minutes you want to focus for')
-	parser.add_argument('Break timer length', metavar='B_Time', type=int, nargs='?', help='The number of minutes you want to break for')
+	parser.add_argument('Focus timer length', metavar='F_Time', type=int, nargs='?', help='The number of minutes you want to focus for. Default: '+str(WORK_MINUTES)+' minutes')
+	parser.add_argument('Break timer length', metavar='B_Time', type=int, nargs='?', help='The number of minutes you want to break for. Default: '+str(BREAK_MINUTES)+' minutes')
 	#Sparser.add_argument('Long break timer length', metavar='L_Time', type=int, nargs='?', help='The number of minutes you want to take a long break for')
-	parser.add_argument('Window Width', metavar='w', type=int, nargs='?', help='Width')
-	parser.add_argument('Window Height', metavar='h', type=int, nargs='?', help='Height')
+	parser.add_argument('Window Width', metavar='w', type=int, nargs='?', help='Width. Default:'+str(WINDOW_WIDTH))
+	parser.add_argument('Window Height', metavar='h', type=int, nargs='?', help='Height. Default:'+str(WINDOW_HEIGHT))
 	return vars(parser.parse_args())
 
 
@@ -67,10 +71,10 @@ class Application(tk.Frame):
 		self.pack()
 
 		self.counter = 0
-		self.timers = { Mode.WORK_MINUTES:(lambda t : t*60 if (t != None) else WORK_MINUTES)(workMin),
-						Mode.BREAK_MINUTES:(lambda t : t*60 if (t != None) else BREAK_MINUTES)(breakMin),
-						Mode.LONG_BREAK:(lambda t : t*60 if (t != None) else LONG_BREAK)(longBreakMin) }
-		self.mode = Mode.WORK_MINUTES
+		self.timers = { Mode.WORK:(lambda t : t*60 if (t != None) else WORK_SECONDS)(workMin),
+						Mode.SHORT_BREAK:(lambda t : t*60 if (t != None) else BREAK_SECONDS)(breakMin),
+						Mode.LONG_BREAK:(lambda t : t*60 if (t != None) else LONG_BREAK_SECONDS)(longBreakMin) }
+		self.mode = Mode.WORK
 		self.numberOfPomodoro = 0
 
 		self.master.bind("<Key>", self.handle_keypress)
@@ -118,12 +122,12 @@ class Application(tk.Frame):
 
 
 	def updateGui(self, setNextUpdate = True):
-		if self.mode == Mode.WORK_MINUTES and self.counter >= self.timers[Mode.WORK_MINUTES]:
+		if self.mode == Mode.WORK and self.counter >= self.timers[Mode.WORK]:
 			# Switch to take a break mode
-			self.changeMode(newMode=Mode.BREAK_MINUTES,text=BREAK_TIME)
-		elif self.mode == Mode.BREAK_MINUTES and self.counter >= self.timers[Mode.BREAK_MINUTES]:
+			self.changeMode(newMode=Mode.SHORT_BREAK,text=BREAK_TIME)
+		elif self.mode == Mode.SHORT_BREAK and self.counter >= self.timers[Mode.SHORT_BREAK]:
 			# Switch to focus mode
-			self.changeMode(newMode=Mode.WORK_MINUTES,text=FOCUS)
+			self.changeMode(newMode=Mode.WORK,text=FOCUS)
 		elif self.mode == Mode.LONG_BREAK and self.counter >= self.timers[Mode.LONG_BREAK]:
 			pass
 
@@ -191,8 +195,8 @@ def main():
 
 	print("Running")
 
-	print("Study Time:",  (lambda t : t if (t != None) else WORK_MINUTES/60)(args['Focus timer length']), 
-		  " Break Time:", (lambda t : t if (t != None) else BREAK_MINUTES/60)(args['Break timer length']))
+	print("Study Time:",  (lambda t : t if (t != None) else WORK_MINUTES)(args['Focus timer length']), 
+		  " Break Time:", (lambda t : t if (t != None) else BREAK_MINUTES)(args['Break timer length']))
 		  #" Long Break Time:", (lambda t : t if (t != None) else LONG_BREAK/60)(args['Long break timer length']))
 
 	app = Application(master=window,
