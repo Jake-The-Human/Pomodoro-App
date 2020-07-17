@@ -99,7 +99,7 @@ class Application(tk.Frame):
 
 		#create buttons
 		self.currentTimeLabel = tk.Label(master=self, font="Helvetica 10")
-		self.btn = tk.Button(master=self,text=START,command=self.startButton)
+		self.btn = tk.Button(master=self,text=START,font="Helvetica 10",command=self.startButton)
 
 		self.currentTimeLabel.grid(row=2,column=0,sticky="w", padx=10)
 		self.btn.grid(row=2,column=0,sticky="e",padx=15,pady=10, ipadx=20)
