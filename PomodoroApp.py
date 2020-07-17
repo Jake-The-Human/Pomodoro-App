@@ -29,7 +29,7 @@ START = "Start"
 PAUSE = "Pause"
 FOCUS = "Focus!"
 BREAK_TIME = "Break Time!"
-#       -        #
+#       --       #
 
 class Mode(Enum):
 	WORK = 0
@@ -65,15 +65,18 @@ class Application(tk.Frame):
 		self.master.title("Pomodoro")
 		self.master.resizable(False, False)
 
-		self.windowWidth = (lambda w : w if (w != None) else WINDOW_WIDTH)(windowWidth)
-		self.windowHeight = (lambda h : h if (h != None) else WINDOW_HEIGHT)(windowHeight)
+		def argCheck(arg, defaultValue, scaler=1):
+			return arg*scaler if (arg != None) else defaultValue
+
+		self.windowWidth = argCheck(arg=windowWidth,defaultValue=WINDOW_WIDTH)
+		self.windowHeight = argCheck(arg=windowHeight,defaultValue=WINDOW_HEIGHT)
 		self.master.geometry(str(self.windowWidth)+'x'+str(self.windowHeight))
 		self.pack()
 
 		self.counter = 0
-		self.timers = { Mode.WORK:(lambda t : t*60 if (t != None) else WORK_SECONDS)(workMin),
-						Mode.SHORT_BREAK:(lambda t : t*60 if (t != None) else BREAK_SECONDS)(breakMin),
-						Mode.LONG_BREAK:(lambda t : t*60 if (t != None) else LONG_BREAK_SECONDS)(longBreakMin) }
+		self.timers = { Mode.WORK:argCheck(arg=workMin,defaultValue=WORK_SECONDS,scaler=60),
+						Mode.SHORT_BREAK:argCheck(arg=breakMin,defaultValue=BREAK_SECONDS,scaler=60),
+						Mode.LONG_BREAK:argCheck(arg=longBreakMin,defaultValue=LONG_BREAK_SECONDS,scaler=60) }
 		self.mode = Mode.WORK
 		self.numberOfPomodoro = 0
 
