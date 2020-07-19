@@ -5,6 +5,7 @@ import argparse
 
 # NOTE: make a array of colors so each run of the timer will have a different color
 # TODO: Add config file to set a default colors and time
+# TODO: Make GUI-less option
 
 # DEFAULT VALUES #
 # Window WIDTH AND HEIGHT
@@ -23,6 +24,7 @@ BACKGROUND_COLOR = "turquoise"
 TIMER_BG_COLOR = "light green"
 TIMER_COLOR = "coral"
 TIMER_CENTER_COLOR = "dark grey"
+NUM_POMDORO_COLOR = "red"
 #STRINGS
 GET_READY = "Get Ready!"
 START = "Start"
@@ -39,9 +41,27 @@ class Mode(Enum):
 
 def getCommandLineArgs():
 	parser = argparse.ArgumentParser(description='Setup your Pomodoro Timer')
-	parser.add_argument('Focus timer length', metavar='F_Time', type=int, nargs='?', help='The number of minutes you want to focus for. Default: '+str(WORK_MINUTES)+' minutes')
-	parser.add_argument('Break timer length', metavar='B_Time', type=int, nargs='?', help='The number of minutes you want to break for. Default: '+str(BREAK_MINUTES)+' minutes')
-	#Sparser.add_argument('Long break timer length', metavar='L_Time', type=int, nargs='?', help='The number of minutes you want to take a long break for')
+	parser.add_argument(
+		'Focus timer length', 
+		metavar='F_Time',
+		type=int,
+		nargs='?',
+		help='The number of minutes you want to focus for. Default: '+str(WORK_MINUTES)+' minutes'
+	)
+	parser.add_argument(
+		'Break timer length',
+		metavar='B_Time',
+		type=int,
+		nargs='?',
+		help='The number of minutes you want to break for. Default: '+str(BREAK_MINUTES)+' minutes'
+	)
+	# parser.add_argument(
+	# 	'Long break timer length',
+	# 	metavar='L_Time',
+	# 	type=int,
+	# 	nargs='?',
+	# 	help='The number of minutes you want to take a long break for'
+	# )
 	parser.add_argument('Window Width', metavar='w', type=int, nargs='?', help='Width. Default:'+str(WINDOW_WIDTH))
 	parser.add_argument('Window Height', metavar='h', type=int, nargs='?', help='Height. Default:'+str(WINDOW_HEIGHT))
 	return vars(parser.parse_args())
@@ -105,7 +125,7 @@ class Application(tk.Frame):
 		self.btn = tk.Button(master=self,text=START,font="Helvetica 10",command=self.startButton)
 
 		self.currentTimeLabel.grid(row=2,column=0,sticky="w", padx=10)
-		self.btn.grid(row=2,column=0,sticky="e",padx=15,pady=10, ipadx=20)
+		self.btn.grid(row=2,column=0,sticky="e",padx=12,pady=10, ipadx=20)
 		return
 
 
@@ -119,7 +139,7 @@ class Application(tk.Frame):
 	def updateCounter(self):
 		# Update Pomodoro Timer #
 		if self.btn["text"] == PAUSE:
-			self.counter += 1
+			self.counter += 100
 		# Put updateCounter to sleep for one second
 		return self.master.after(1000, self.updateCounter)
 
@@ -145,7 +165,14 @@ class Application(tk.Frame):
 		circlePercent = (self.counter / self.timers[self.mode]) * 360.0
 		# print(circlePercent) # DEBUG
 
-		createCircle(x=circleXPos, y=circleYPos, r=bigCircleRadius, canvas=self.circleCanvas, fill=TIMER_BG_COLOR, width=2)
+		createCircle(
+			x=circleXPos,
+			y=circleYPos,
+			r=bigCircleRadius,
+			canvas=self.circleCanvas,
+			fill=TIMER_BG_COLOR,
+			width=2
+		)
 		#this arc needs to redraw as the timer goes down
 		createArc(x=circleXPos, y=circleYPos, r=bigCircleRadius-0.5,
 				canvas=self.circleCanvas,
@@ -154,7 +181,53 @@ class Application(tk.Frame):
 				extent=circlePercent,
 				width=2
 			)
-		createCircle(x=circleXPos, y=circleYPos, r=smallCircleRadius, canvas=self.circleCanvas, fill=TIMER_CENTER_COLOR, width=2)
+		createCircle(
+			x=circleXPos,
+			y=circleYPos,
+			r=smallCircleRadius,
+			canvas=self.circleCanvas,
+			fill=TIMER_CENTER_COLOR,
+			width=2
+		)
+
+		numberOfPomodoroGUIOffset = 25
+
+		if self.numberOfPomodoro == 1:
+			createCircle(
+				x=numberOfPomodoroGUIOffset,
+				y=numberOfPomodoroGUIOffset,
+				r=10,
+				canvas=self.circleCanvas,
+				fill=NUM_POMDORO_COLOR,
+				width=2
+			)
+		if self.numberOfPomodoro == 2:
+			createCircle(
+				x=numberOfPomodoroGUIOffset,
+				y=self.circleCanvas.winfo_height()-numberOfPomodoroGUIOffset,
+				r=10,
+				canvas=self.circleCanvas,
+				fill=NUM_POMDORO_COLOR,
+				width=2
+			)
+		if self.numberOfPomodoro == 3:
+			createCircle(
+				x=self.circleCanvas.winfo_width()-numberOfPomodoroGUIOffset,
+				y=self.circleCanvas.winfo_height()-numberOfPomodoroGUIOffset,
+				r=10,
+				canvas=self.circleCanvas,
+				fill=NUM_POMDORO_COLOR,
+				width=2
+			)
+		if self.numberOfPomodoro == 4:
+			createCircle(
+				x=self.circleCanvas.winfo_width()-numberOfPomodoroGUIOffset,
+				y=numberOfPomodoroGUIOffset,
+				r=10,
+				canvas=self.circleCanvas,
+				fill=NUM_POMDORO_COLOR,
+				width=2
+			)
 
 		# Update Time #
 		self.currentTimeLabel["text"] = datetime.now().strftime('%a %m/%d/%Y %I:%M') # for am pm use %p
@@ -171,7 +244,7 @@ class Application(tk.Frame):
 		self.timerLabel["text"] = GET_READY
 		self.numberOfPomodoro -= 1 if (self.numberOfPomodoro != 0 and keypress) else 0
 		self.updateGui(setNextUpdate=False)
-		print("Timer was reset!", "Number of Pomodoros so far:",self.numberOfPomodoro)
+		# print("Timer was reset!", "Number of Pomodoros so far:"+str(self.numberOfPomodoro))
 		return
 
 
@@ -186,9 +259,10 @@ class Application(tk.Frame):
 
 	def changeMode(self, newMode, text):
 		self.reset()
+		if self.mode == Mode.WORK:
+			self.numberOfPomodoro += 1
 		self.mode = newMode
 		self.timerLabel["text"] = text
-		self.numberOfPomodoro += 1
 		return
 
 
