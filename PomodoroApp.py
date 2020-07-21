@@ -143,7 +143,7 @@ class Application(tk.Frame):
 		self.timerLabel = tk.Label(
 			master=self,
 			text=GET_READY,
-			font=("Helvetica",int(windowWidth * 0.072),"underline")
+			font=("Helvetica",int(windowWidth*0.072),"underline")
 		)
 		self.timerLabel.grid(row=1,column=0,sticky="nsew",pady=4)
 
@@ -156,8 +156,8 @@ class Application(tk.Frame):
 			command=self.startButton
 		)
 
-		self.currentTimeLabel.grid(row=2,column=0,sticky="nsw", padx=10)
-		self.btn.grid(row=2,column=0,sticky="nse",padx=12,pady=10, ipadx=20)
+		self.currentTimeLabel.grid(row=2,column=0,sticky="nsw", padx=2)
+		self.btn.grid(row=2,column=0,sticky="nse",padx=12, ipadx=20)
 
 		self.master.columnconfigure(0,weight=1)
 		self.master.rowconfigure([0,1,2],weight=1)
