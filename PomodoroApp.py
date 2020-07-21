@@ -10,11 +10,11 @@ import argparse
 # DEFAULT VALUES #
 # Window WIDTH AND HEIGHT
 WINDOW_WIDTH  = 250
-WINDOW_HEIGHT = 250
+WINDOW_HEIGHT = 300
 # TIMER LENGTHS
-WORK_MINUTES = 25
-BREAK_MINUTES = 5
-LONG_BREAK_MINUTES = 30
+WORK_MINUTES = int(25)
+BREAK_MINUTES = int(5)
+LONG_BREAK_MINUTES = int(30)
 
 WORK_SECONDS = WORK_MINUTES * 60
 BREAK_SECONDS = BREAK_MINUTES * 60
@@ -24,7 +24,7 @@ BACKGROUND_COLOR = "turquoise"
 TIMER_BG_COLOR = "light green"
 TIMER_COLOR = "coral"
 TIMER_CENTER_COLOR = "dark grey"
-NUM_POMDORO_COLOR = "red"
+NUM_POMODORO_COLOR = "red"
 #STRINGS
 GET_READY = "Get Ready!"
 START = "Start"
@@ -62,8 +62,20 @@ def getCommandLineArgs():
 	# 	nargs='?',
 	# 	help='The number of minutes you want to take a long break for'
 	# )
-	parser.add_argument('Window Width', metavar='w', type=int, nargs='?', help='Width. Default:'+str(WINDOW_WIDTH))
-	parser.add_argument('Window Height', metavar='h', type=int, nargs='?', help='Height. Default:'+str(WINDOW_HEIGHT))
+	parser.add_argument(
+		'Window Width',
+		metavar='w',
+		type=int,
+		nargs='?',
+		help='Width. Default:'+str(WINDOW_WIDTH)
+	)
+	parser.add_argument(
+		'Window Height',
+		metavar='h',
+		type=int,
+		nargs='?',
+		help='Height. Default:'+str(WINDOW_HEIGHT)
+	)
 	return vars(parser.parse_args())
 
 
@@ -78,54 +90,77 @@ def createArc(x, y, r, canvas, **kwargs):
 
 class Application(tk.Frame):
 	def __init__(self, master=None, windowWidth=None, windowHeight=None, workMin=None, breakMin=None, longBreakMin=None):
+		if master is None:
+			master = tk.Tk()
+
 		super().__init__(master)
 
-		self.master = master
+		self.columnconfigure(0,weight=1)
+		self.rowconfigure([0,1,2],weight=1)
+		self.grid(sticky="nsew")
 
+		self.master = master
 		self.master.title("Pomodoro")
 		self.master.resizable(False, False)
 
 		def argCheck(arg, defaultValue, scaler=1):
-			return arg*scaler if (arg != None) else defaultValue
+			result = int(arg*scaler) if (arg is not None) else int(defaultValue)
+			assert result != 0, "Timer times must be at least 1 mintute"
+			return result
 
-		self.windowWidth = argCheck(arg=windowWidth,defaultValue=WINDOW_WIDTH)
-		self.windowHeight = argCheck(arg=windowHeight,defaultValue=WINDOW_HEIGHT)
-		self.master.geometry(str(self.windowWidth)+'x'+str(self.windowHeight))
-		self.pack()
+		windowWidth = argCheck(arg=windowWidth,defaultValue=WINDOW_WIDTH)
+		windowHeight = argCheck(arg=windowHeight,defaultValue=WINDOW_HEIGHT)
+		self.master.geometry(str(windowWidth)+'x'+str(windowHeight))
 
 		self.counter = 0
-		self.timers = { Mode.WORK:argCheck(arg=workMin,defaultValue=WORK_SECONDS,scaler=60),
-						Mode.SHORT_BREAK:argCheck(arg=breakMin,defaultValue=BREAK_SECONDS,scaler=60),
-						Mode.LONG_BREAK:argCheck(arg=longBreakMin,defaultValue=LONG_BREAK_SECONDS,scaler=60) }
+		self.timers = { 
+			Mode.WORK:argCheck(arg=workMin,defaultValue=WORK_SECONDS,scaler=60),
+			Mode.SHORT_BREAK:argCheck(arg=breakMin,defaultValue=BREAK_SECONDS,scaler=60),
+			Mode.LONG_BREAK:argCheck(arg=longBreakMin,defaultValue=LONG_BREAK_SECONDS,scaler=60)
+		}
 		self.mode = Mode.WORK
 		self.numberOfPomodoro = 0
+		self.numberOfFocusPom = 0
 
 		self.master.bind("<Key>", self.handle_keypress)
 		# NOTE DELETE ME: FOR debug #
 		self.master.bind("<Escape>", lambda event : self.master.destroy())
 
-		self.create_widgets()
+		self.create_widgets(windowWidth=windowWidth,windowHeight=windowHeight)
 		self.updateCounter()
 		self.updateGui()
 
 
-	def create_widgets(self):
-		self.master.columnconfigure(0,minsize=self.windowWidth)
-		self.master.rowconfigure([0,1,2],minsize=1)
-
-		self.circleCanvas = tk.Canvas(self,width=self.windowWidth,height=self.windowHeight*0.65,bg=BACKGROUND_COLOR)
+	def create_widgets(self, windowWidth, windowHeight):
+		self.circleCanvas = tk.Canvas(
+			master=self,
+			width=windowWidth,
+			height=windowHeight*0.65,
+		)
 		self.circleCanvas.grid(row=0,column=0,sticky="nsew")
 
 		# creating the text
-		self.timerLabel = tk.Label(master=self, text=GET_READY,font="Helvetica 18 underline")
+		self.timerLabel = tk.Label(
+			master=self,
+			text=GET_READY,
+			font=("Helvetica",int(windowWidth * 0.072),"underline")
+		)
 		self.timerLabel.grid(row=1,column=0,sticky="nsew",pady=4)
 
 		#create buttons
-		self.currentTimeLabel = tk.Label(master=self, font="Helvetica 10")
-		self.btn = tk.Button(master=self,text=START,font="Helvetica 10",command=self.startButton)
+		self.currentTimeLabel = tk.Label(master=self, font=("Helvetica",int(windowWidth * 0.04)))
+		self.btn = tk.Button(
+			master=self,
+			text=START,
+			font=("Helvetica",int(windowWidth * 0.04)),
+			command=self.startButton
+		)
 
-		self.currentTimeLabel.grid(row=2,column=0,sticky="w", padx=10)
-		self.btn.grid(row=2,column=0,sticky="e",padx=12,pady=10, ipadx=20)
+		self.currentTimeLabel.grid(row=2,column=0,sticky="nsw", padx=10)
+		self.btn.grid(row=2,column=0,sticky="nse",padx=12,pady=10, ipadx=20)
+
+		self.master.columnconfigure(0,weight=1)
+		self.master.rowconfigure([0,1,2],weight=1)
 		return
 
 
@@ -139,7 +174,7 @@ class Application(tk.Frame):
 	def updateCounter(self):
 		# Update Pomodoro Timer #
 		if self.btn["text"] == PAUSE:
-			self.counter += 100
+			self.counter += 1
 		# Put updateCounter to sleep for one second
 		return self.master.after(1000, self.updateCounter)
 
@@ -156,15 +191,18 @@ class Application(tk.Frame):
 
 		# Update Graphics #
 		# creating the timer dimensions
-		circleXPos = self.windowWidth/2
-		circleYPos = self.windowHeight/3
-		bigCircleRadius = 75.0
-		smallCircleRadius = 33.0
+		windowWidth = self.circleCanvas.winfo_width()
+		windowHeight = self.circleCanvas.winfo_height()
+
+		circleXPos = windowWidth/2
+		circleYPos = windowHeight/2
+		bigCircleRadius  = windowWidth * 0.3
+		smallCircleRadius = windowWidth * 0.14
 		startingArcAngle = 90.0
 
 		circlePercent = (self.counter / self.timers[self.mode]) * 360.0
-		# print(circlePercent) # DEBUG
 
+		self.circleCanvas.create_rectangle(0,0,windowWidth,windowHeight,fill=BACKGROUND_COLOR)
 		createCircle(
 			x=circleXPos,
 			y=circleYPos,
@@ -175,12 +213,12 @@ class Application(tk.Frame):
 		)
 		#this arc needs to redraw as the timer goes down
 		createArc(x=circleXPos, y=circleYPos, r=bigCircleRadius-0.5,
-				canvas=self.circleCanvas,
-				fill=TIMER_COLOR,
-				start=startingArcAngle,
-				extent=circlePercent,
-				width=2
-			)
+			canvas=self.circleCanvas,
+			fill=TIMER_COLOR,
+			start=startingArcAngle,
+			extent=circlePercent,
+			width=2
+		)
 		createCircle(
 			x=circleXPos,
 			y=circleYPos,
@@ -190,44 +228,42 @@ class Application(tk.Frame):
 			width=2
 		)
 
-		numberOfPomodoroGUIOffset = 25
+		numberOfPomodoroGUIOffsetX = windowWidth * 0.1
+		numberOfPomodoroGUIOffsetY = windowHeight * 0.1
+		numberOfPomodoroGUIRadius  = windowWidth * 0.04
 
-		if self.numberOfPomodoro == 1:
-			createCircle(
-				x=numberOfPomodoroGUIOffset,
-				y=numberOfPomodoroGUIOffset,
-				r=10,
-				canvas=self.circleCanvas,
-				fill=NUM_POMDORO_COLOR,
-				width=2
-			)
-		if self.numberOfPomodoro == 2:
-			createCircle(
-				x=numberOfPomodoroGUIOffset,
-				y=self.circleCanvas.winfo_height()-numberOfPomodoroGUIOffset,
-				r=10,
-				canvas=self.circleCanvas,
-				fill=NUM_POMDORO_COLOR,
-				width=2
-			)
-		if self.numberOfPomodoro == 3:
-			createCircle(
-				x=self.circleCanvas.winfo_width()-numberOfPomodoroGUIOffset,
-				y=self.circleCanvas.winfo_height()-numberOfPomodoroGUIOffset,
-				r=10,
-				canvas=self.circleCanvas,
-				fill=NUM_POMDORO_COLOR,
-				width=2
-			)
-		if self.numberOfPomodoro == 4:
-			createCircle(
-				x=self.circleCanvas.winfo_width()-numberOfPomodoroGUIOffset,
-				y=numberOfPomodoroGUIOffset,
-				r=10,
-				canvas=self.circleCanvas,
-				fill=NUM_POMDORO_COLOR,
-				width=2
-			)
+		createCircle(
+			x=numberOfPomodoroGUIOffsetX,
+			y=numberOfPomodoroGUIOffsetY,
+			r=numberOfPomodoroGUIRadius,
+			canvas=self.circleCanvas,
+			fill=NUM_POMODORO_COLOR if (self.numberOfFocusPom >= 1) else BACKGROUND_COLOR,
+			width=2
+		)
+		createCircle(
+			x=numberOfPomodoroGUIOffsetX,
+			y=windowHeight-numberOfPomodoroGUIOffsetY,
+			r=numberOfPomodoroGUIRadius,
+			canvas=self.circleCanvas,
+			fill=NUM_POMODORO_COLOR if (self.numberOfFocusPom >= 2) else BACKGROUND_COLOR,
+			width=2
+		)
+		createCircle(
+			x=windowWidth-numberOfPomodoroGUIOffsetX,
+			y=windowHeight-numberOfPomodoroGUIOffsetY,
+			r=numberOfPomodoroGUIRadius,
+			canvas=self.circleCanvas,
+			fill=NUM_POMODORO_COLOR if (self.numberOfFocusPom >= 3) else BACKGROUND_COLOR,
+			width=2
+		)
+		createCircle(
+			x=windowWidth-numberOfPomodoroGUIOffsetX,
+			y=numberOfPomodoroGUIOffsetY,
+			r=numberOfPomodoroGUIRadius,
+			canvas=self.circleCanvas,
+			fill=NUM_POMODORO_COLOR if (self.numberOfFocusPom >= 4) else BACKGROUND_COLOR,
+			width=2
+		)
 
 		# Update Time #
 		self.currentTimeLabel["text"] = datetime.now().strftime('%a %m/%d/%Y %I:%M') # for am pm use %p
@@ -263,26 +299,30 @@ class Application(tk.Frame):
 			self.numberOfPomodoro += 1
 		self.mode = newMode
 		self.timerLabel["text"] = text
+
+		if self.numberOfPomodoro == 4 and newMode == Mode.WORK:
+			self.numberOfFocusPom = 0
+		elif newMode == Mode.SHORT_BREAK:
+			self.numberOfFocusPom += 1
 		return
 
 
 def main():
 	args = getCommandLineArgs()
-	window = tk.Tk()
 
 	print("Running")
 
-	print("Study Time:",  (lambda t : t if (t != None) else WORK_MINUTES)(args['Focus timer length']), 
-		  " Break Time:", (lambda t : t if (t != None) else BREAK_MINUTES)(args['Break timer length']))
+	print("Study Time:",  int((lambda t : t if (t != None) else WORK_MINUTES)(args['Focus timer length'])), "minutes,", 
+		  " Break Time:", int((lambda t : t if (t != None) else BREAK_MINUTES)(args['Break timer length'])),  "minutes")
 		  #" Long Break Time:", (lambda t : t if (t != None) else LONG_BREAK/60)(args['Long break timer length']))
 
-	app = Application(master=window,
-						windowWidth=args['Window Width'],
-						windowHeight=args['Window Height'],
-						workMin=args['Focus timer length'],
-						breakMin=args['Break timer length'],
-						#longBreakMin=args['Long break timer length']
-					)
+	app = Application(  
+		windowWidth=args['Window Width'],
+		windowHeight=args['Window Height'],
+		workMin=args['Focus timer length'],
+		breakMin=args['Break timer length'],
+		#longBreakMin=args['Long break timer length']
+	)
 	app.mainloop()
 
 	print("Quiting")
