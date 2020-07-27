@@ -46,7 +46,7 @@ class Application():
         numberOfChar = 75
         percentComplete = int((counter / self.timers[self.mode]) * numberOfChar)
         print(
-            "|" + ("#" * percentComplete) + ("-" * (numberOfChar - percentComplete - 1)) + "|",
+            "|" + ("#" * percentComplete) + ("-" * (numberOfChar - percentComplete - 1)) + "|" + (" " * 5),
             end="\r",
             flush=True
         )
