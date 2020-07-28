@@ -3,7 +3,7 @@ import sys
 
 import ConstValues as cv
 
-UPDATE_TIME = 1
+UPDATE_TIME = .01
 
 class Application():
     def __init__(self, workMin=None, breakMin=None, longBreakMin=None):
@@ -62,5 +62,6 @@ class Application():
 
     def changeMode(self):
         self.mode = cv.Mode.SHORT_BREAK if (self.mode == cv.Mode.WORK) else cv.Mode.WORK
+        cv.playSound()
 
         

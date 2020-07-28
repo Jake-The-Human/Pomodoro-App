@@ -3,6 +3,8 @@ from datetime import datetime
 
 import ConstValues
 
+# use this for debugging controlls the app's timer
+COUNTER = 1
 
 # x, y are the center of the circle
 def createCircle(x, y, r, canvas, **kwargs):
@@ -111,12 +113,13 @@ class Application(tk.Frame):
 	def updateCounter(self):
 		# Update Pomodoro Timer #
 		if self.btn["text"] == ConstValues.PAUSE:
-			self.counter += 1
+			self.counter += COUNTER
 		# Put updateCounter to sleep for one second
 		return self.master.after(1000, self.updateCounter)
 
 
 	def updateGui(self, setNextUpdate = True):
+		# Updates the mode
 		if self.mode == ConstValues.Mode.WORK and self.counter >= self.timers[ConstValues.Mode.WORK]:
 			# Switch to take a break mode
 			self.changeMode(newMode=ConstValues.Mode.SHORT_BREAK, text=ConstValues.BREAK_TIME)
@@ -125,7 +128,7 @@ class Application(tk.Frame):
 			self.changeMode(newMode=ConstValues.Mode.WORK, text=ConstValues.FOCUS)
 		elif self.mode == ConstValues.Mode.LONG_BREAK and self.counter >= self.timers[ConstValues.Mode.LONG_BREAK]:
 			pass
-
+		
 		# Update Graphics #
 		# creating the timer dimensions
 		windowWidth  = self.circleCanvas.winfo_width()
@@ -226,6 +229,7 @@ class Application(tk.Frame):
 		self.timerLabel["text"] = ConstValues.GET_READY
 		self.numberOfPomodoro -= 1 if (self.numberOfPomodoro != 0 and keypress) else 0
 		self.updateGui(setNextUpdate=False)
+		ConstValues.playSound(play=not keypress)
 		return
 
 

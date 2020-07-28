@@ -1,4 +1,5 @@
 from enum import Enum
+from sys import platform
 
 
 # DEFAULT VALUES #
@@ -19,12 +20,16 @@ TIMER_BG_COLOR = "light green"
 TIMER_COLOR = "coral"
 TIMER_CENTER_COLOR = "dark grey"
 NUM_POMODORO_COLOR = "red"
-#STRINGS
+# STRINGS
 GET_READY = "Get Ready!"
 START = "Start"
 PAUSE = "Pause"
 FOCUS = "Focus!"
 BREAK_TIME = "Break Time!"
+# OS
+WINDOWS = platform == 'win32' or platform == 'cygwin'
+MAC = platform == 'darwin'
+LINUX = platform == 'linux'
 #       --       #
 
 
@@ -36,4 +41,14 @@ class Mode(Enum):
 
 def modeString(mode):
 	return FOCUS if (mode == Mode.WORK) else BREAK_TIME
+
+
+def playSound(play=True):
+	if play:
+		if WINDOWS:
+			import winsound
+			winsound.Beep(frequency=440, duration=400)
+			winsound.Beep(frequency=440, duration=400)
+		elif MAC or LINUX:
+			print('\a\a', end='')
 
