@@ -3,7 +3,7 @@ import sys
 
 import ConstValues as cv
 
-UPDATE_TIME = .01
+UPDATE_TIME = 1
 
 class Application():
     def __init__(self, workMin=None, breakMin=None, longBreakMin=None):
@@ -46,7 +46,7 @@ class Application():
         numberOfChar = 75
         percentComplete = int((counter / self.timers[self.mode]) * numberOfChar)
         print(
-            "|" + ("#" * percentComplete) + ("-" * (numberOfChar - percentComplete - 1)) + "|" + (" " * 5),
+            "|" + ("#" * percentComplete) + ("-" * (numberOfChar - percentComplete - 1)) + "|",
             end="\r",
             flush=True
         )
@@ -54,8 +54,7 @@ class Application():
 
     def continueApp(self):
         userInput = input("\n-Nice Work! Continue? Y/N/S(Skip next timer): ").lower()
-        skip = (userInput == 's' or userInput == "skip")
-        if skip:
+        if skip := (userInput == 's' or userInput == "skip"):
             self.changeMode()
         return userInput == 'y' or userInput == "yes" or skip
     

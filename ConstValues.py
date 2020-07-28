@@ -4,40 +4,60 @@ from sys import platform
 import json
 try:
 	with open('config.json') as f:
-		data = json.load(f)
+		appConfig = json.load(f)
 except IOError:
-	data = None
+	appConfig = None
 
-def defaultValuesFromFile(config, key1, key2, defaultValue):
-	if config != None and (value := config.get(key1, False).get(key2, False)):
-		return value
+# This func let the program still run if there is no config file
+def defaultValuesFromFile(config, key, defaultValues):
+	if config != None and (value := config.get(key, False)):
+		results = defaultValues
+		counter = 0 
+		for k,v in value.items():
+			results[counter] = (v if (k is not None) else defaultValues.at(counter))
+			counter += 1
+		# print(results)
+		return results
 	else:
-		return defaultValue
+		print("Something went wrong with config file.")
+		return defaultValues
+
+
+def setupLang(config, lang, defualtValues):
+	if config != None and (value := config.get('lang', False)):
+		return defaultValuesFromFile(value, lang, defualtValues)
+	else:
+		print("Something went wrong with config file.")
+		return defualtValues
 
 # DEFAULT VALUES #
 # Window WIDTH AND HEIGHT
-WINDOW_WIDTH  = defaultValuesFromFile(data, 'window_size', 'width', 250)
-WINDOW_HEIGHT = defaultValuesFromFile(data, 'window_size', 'height', 300)
+WINDOW_WIDTH, WINDOW_HEIGHT = defaultValuesFromFile(appConfig, 'window_size', [250 , 300])
+
 # TIMER LENGTHS
-WORK_MINUTES = defaultValuesFromFile(data, 'time', 'work_time', int(25))
-BREAK_MINUTES = defaultValuesFromFile(data, 'time', 'break_time', int(5))
-LONG_BREAK_MINUTES = defaultValuesFromFile(data, 'time', 'long_break_time', int(30))
+WORK_MINUTES, BREAK_MINUTES, LONG_BREAK_MINUTES = defaultValuesFromFile(appConfig, 'time', [25, 5, 30])
 
 WORK_SECONDS = WORK_MINUTES * 60
 BREAK_SECONDS = BREAK_MINUTES * 60
 LONG_BREAK_SECONDS = LONG_BREAK_MINUTES * 60
+
 # COLOR VALUES
-BACKGROUND_COLOR = defaultValuesFromFile(data, 'color', 'background', "turquoise")
-TIMER_BG_COLOR = "light green"
-TIMER_COLOR = "coral"
-TIMER_CENTER_COLOR = "dark grey"
-NUM_POMODORO_COLOR = "red"
+BACKGROUND_COLOR, TIMER_BG_COLOR, TIMER_COLOR, TIMER_CENTER_COLOR, NUM_POMODORO_COLOR = defaultValuesFromFile(
+	appConfig,
+	'color',
+	["turquoise", "light green", "coral", "dark grey", "red"]
+)
+# KEY BINDINGS
+KEY_RESET, KEY_PAUSE = defaultValuesFromFile(appConfig, 'keyboard_shortcuts', ["r" , " "])
+
 # STRINGS
-GET_READY = "Get Ready!"
-START = "Start"
-PAUSE = "Pause"
-FOCUS = "Focus!"
-BREAK_TIME = "Break Time!"
+CURRENT_LANG = 'english'
+GET_READY, START, PAUSE, FOCUS, BREAK_TIME = setupLang(
+	appConfig,
+	CURRENT_LANG,
+	["Get Ready!", "Start", "Pause", "Focus!", "Break Time!"]
+)
+
 # OS
 WINDOWS = platform == 'win32' or platform == 'cygwin'
 MAC = platform == 'darwin'
@@ -62,5 +82,6 @@ def playSound(play=True):
 			winsound.Beep(frequency=440, duration=400)
 			winsound.Beep(frequency=440, duration=400)
 		elif MAC or LINUX:
-			print('\a\a', end='')
+			import sys
+			print('\a\a', end='\r', file=sys.stdout)
 

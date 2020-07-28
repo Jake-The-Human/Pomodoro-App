@@ -235,9 +235,9 @@ class Application(tk.Frame):
 
 	def handle_keypress(self, event):
 		# print(event.char, end='') # DEBUG
-		if event.char == ' ':
+		if event.char == ConstValues.KEY_PAUSE:
 			self.startButton()
-		elif event.char == 'r':
+		elif event.char == ConstValues.KEY_RESET:
 			self.reset(keypress=True)
 		return
 
