@@ -1,0 +1,31 @@
+{
+    "window_size": {
+        "width":250,
+        "height":300
+    },
+    "time": {
+        "work_time":25,
+        "break_time":5,
+        "long_break_time":30
+    },
+    "color": {
+        "background":"turquoise",
+        "timer_background":"light green",
+        "timer_color":"coral",
+        "timer_center_color":"dark grey",
+        "pomodoro_counter_color":"red"
+    },
+    "keyboard_shortcuts": {
+        "reset_timer":"r",
+        "start_pause":" "
+    },
+    "lang": {
+        "english": {
+            "get_ready":"Get Ready!",
+            "start":"Start",
+            "pause":"Pause",
+            "focus":"Focus!",
+            "break_time":"Break Time!"
+        }
+    }
+}

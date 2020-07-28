@@ -1,21 +1,33 @@
 from enum import Enum
 from sys import platform
 
+import json
+try:
+	with open('config.json') as f:
+		data = json.load(f)
+except IOError:
+	data = None
+
+def defaultValuesFromFile(config, key1, key2, defaultValue):
+	if config != None and (value := config.get(key1, False).get(key2, False)):
+		return value
+	else:
+		return defaultValue
 
 # DEFAULT VALUES #
 # Window WIDTH AND HEIGHT
-WINDOW_WIDTH  = 250
-WINDOW_HEIGHT = 300
+WINDOW_WIDTH  = defaultValuesFromFile(data, 'window_size', 'width', 250)
+WINDOW_HEIGHT = defaultValuesFromFile(data, 'window_size', 'height', 300)
 # TIMER LENGTHS
-WORK_MINUTES = int(25)
-BREAK_MINUTES = int(5)
-LONG_BREAK_MINUTES = int(30)
+WORK_MINUTES = defaultValuesFromFile(data, 'time', 'work_time', int(25))
+BREAK_MINUTES = defaultValuesFromFile(data, 'time', 'break_time', int(5))
+LONG_BREAK_MINUTES = defaultValuesFromFile(data, 'time', 'long_break_time', int(30))
 
 WORK_SECONDS = WORK_MINUTES * 60
 BREAK_SECONDS = BREAK_MINUTES * 60
 LONG_BREAK_SECONDS = LONG_BREAK_MINUTES * 60
 # COLOR VALUES
-BACKGROUND_COLOR = "turquoise"
+BACKGROUND_COLOR = defaultValuesFromFile(data, 'color', 'background', "turquoise")
 TIMER_BG_COLOR = "light green"
 TIMER_COLOR = "coral"
 TIMER_CENTER_COLOR = "dark grey"
