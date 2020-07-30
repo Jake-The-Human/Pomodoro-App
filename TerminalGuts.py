@@ -5,7 +5,7 @@ import ConstValues as cv
 
 UPDATE_TIME = 1
 
-class Application():
+class Application:
     def __init__(self, workMin=None, breakMin=None, longBreakMin=None):
         def argCheck(arg, defaultValue, scaler=1):
             result = int(arg * scaler) if (arg is not None) else int(defaultValue)

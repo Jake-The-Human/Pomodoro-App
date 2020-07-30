@@ -13,10 +13,9 @@ def defaultValuesFromFile(config, key, defaultValues):
 	if config != None and (value := config.get(key, False)):
 		results = defaultValues
 		counter = 0 
-		for k,v in value.items():
+		for k, v in value.items():
 			results[counter] = (v if (k is not None) else defaultValues.at(counter))
 			counter += 1
-		# print(results)
 		return results
 	else:
 		print("Something went wrong with config file.")
